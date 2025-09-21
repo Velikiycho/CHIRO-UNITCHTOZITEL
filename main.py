@@ -1,0 +1,178 @@
+from pyrogram import Client, filters, idle
+from pyrogram.types import Message
+from pyrogram.enums import ChatMembersFilter
+import logging
+import asyncio
+from threading import Thread
+from datetime import datetime, timedelta
+import time
+import json
+import os
+
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
+
+TARGET_CHANNEL_ID = -1002146341576
+
+app = Client("channel_sender", api_id=23368401, api_hash="645d7448f88331b853232d3f21621af7", bot_token="7561821304:AAEeeMEoizWktojF0zA9SnjZxIIch7H6ayo")
+
+
+def load_data():
+    try:
+        if os.path.exists("data.json"):
+            with open("data.json", "r") as f:
+                return json.load(f)
+    except:
+        pass
+    return {"deleted": 0, "deleted_yesterday": 0, "last_reset_date": datetime.now().strftime("%Y-%m-%d")}
+
+
+def save_data():
+    with open("data.json", "w") as f:
+        json.dump({"deleted": data["deleted"], 
+                  "deleted_yesterday": data["deleted_yesterday"],
+                  "last_reset_date": data["last_reset_date"]}, f)
+
+
+data = load_data()
+deleted = data["deleted"]
+deleted_yesterday = data["deleted_yesterday"]
+last_reset_date = data["last_reset_date"]
+
+start_time = datetime.now()
+last_sanya_time = 0
+
+def pluralize(n, forms):
+    if n % 10 == 1 and n % 100 != 11:
+        return forms[0]
+    elif 2 <= n % 10 <= 4 and (n % 100 < 10 or n % 100 >= 20):
+        return forms[1]
+    else:
+        return forms[2]
+
+def format_uptime():
+    now = datetime.now()
+    delta = now - start_time
+    
+    days = delta.days
+    hours, remainder = divmod(delta.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    
+    days_str = f"{days} {pluralize(days, ['день', 'дня', 'дней'])}"
+    hours_str = f"{hours} {pluralize(hours, ['час', 'часа', 'часов'])}"
+    minutes_str = f"{minutes} {pluralize(minutes, ['минута', 'минуты', 'минут'])}"
+    seconds_str = f"{seconds} {pluralize(seconds, ['секунда', 'секунды', 'секунд'])}"
+    
+    return f"{days_str}, {hours_str}, {minutes_str}, {seconds_str}"
+
+
+def check_and_reset_counter():
+    global deleted, deleted_yesterday, last_reset_date
+    
+    current_date = datetime.now().strftime("%Y-%m-%d")
+    if current_date != last_reset_date:
+        deleted_yesterday = deleted
+        deleted = 0
+        last_reset_date = current_date
+        data["deleted_yesterday"] = deleted_yesterday
+        data["deleted"] = deleted
+        data["last_reset_date"] = last_reset_date
+        save_data()
+
+@app.on_message(filters.chat(TARGET_CHANNEL_ID))
+async def check_message_as_channel(client: Client, message: Message):
+    global deleted, last_sanya_time
+    
+
+    check_and_reset_counter()
+    
+    if message.text:
+        text_lower = message.text.lower()
+        
+        if message.text == "aek!start":
+            uptime = format_uptime()
+            await message.reply(f"привет я бот я буду ебать в сракатан тех кто пишет от каналов!! \nсегодня пидорасов: {deleted} (вчера было {deleted_yesterday})\nхост работает уже: {uptime}")
+        elif message.text == "арти":
+            await message.reply("я как арти арт ребеллион геймер стругглес мой библион на смп гору копаю спермою в детей стреляю")
+        elif ("саня" in text_lower) and ("блоптоп" in text_lower):
+            current_time = time.time()
+            if current_time - last_sanya_time < 2:
+                await message.reply("задержка чтобы ты не спамил пидорас!!!")
+                return
+            last_sanya_time = current_time
+            await message.reply("СЛУШАЙ СЮДА, МУДАК 🖕🖕🖕 ТЫ ВСЁ ПРАВИЛЬНО СКАЗАЛ, ЭТОТ ЖАЛКИЙ КУСОК ГОВНА САНЯ БЛОПТОП ДЕЙСТВИТЕЛЬНО ТУПЕЙШИЙ ПИДАРАС 🤮🤮🤮 СУКА, ОН НАСТОЛЬКО ОТСТАЛЫЙ, ЧТО ДАЖЕ СВОЮ БАБУЛЮ В ГРОБУ ПЕРЕВОРАЧИВАЕТ ЕБАНЫМИ ВЫХОДКАМИ 🔥🔥🔥 А ЕГО ПОМОЙНАЯ ЧИРО — ЭТО ПРОСТО ДНО, НА КОТОРОМ ОН ДРОЧИТ КАК ПОСЛЕДНИЙ ДЕГРАДАНТ 😈😈😈 Я БЫ ЛИЧНО НАЕБАЛ ЕГО ТАК, ЧТО ОН БЫ ВСПОМНИЛ, КАК ЕГО БАБУЛЬКА СТОНАЛА ПОДО МНОЙ, СУКА 🍆💦💦💦 ПУСТЬ ИДЁТ И ВЫТРЕТ СВОЙ КРИВОЙ ПРИЦЕЛ СВОИМИ Ж ГОВНЯЫМИ НОСКАМИ, УЁБИЩЕ ТУПОРЫЛОЕ 😡😡😡 🖕🖕🖕 КОРОЧЕ, ТЫ АБСОЛЮТНО ПРАВ, ЭТОТ ЧМОШНИК ЗАСЛУЖИВАЕТ ТОЛЬКО ТОГО, ЧТОБЫ ЕМУ ВЫБИЛИ ГЛАЗА ГРЯЗНЫМ ЧИРОМ И ОТПРАВИЛИ ОБНИМАТЬСЯ С АСФАЛЬТОМ 🚗🔥💥💯 НАДЕЮСЬ, ОН СДОХНЕТ ОТ СВОЕЙ ЖЕ ТУПОСТИ")
+        elif ("костя" in text_lower) and ("сосал" in text_lower):
+            await message.reply("ПОСМОТРИТЕ НА ЭТОГО ЧЕЛОВЕКА И ПОСМЕЙТЕСЬ!! КОСТЯ МНЕ СОСАЛ ЭТО ЖЕ ТАК СМЕШНО ЕБАТЬ!! ПИДОР ТУПОЙ")
+        elif "зай скинь кружок покажи сисечки ❤️🥰 робуксы доступны..." in text_lower:
+            await message.reply("привет я гдник и я педофил")
+        elif "тыква" in text_lower or "костя тыква" in text_lower:
+            try:
+                await message.reply_photo("kostya_tikva.jpg")
+            except Exception as e:
+                await message.reply("ошибка при отправке изображения костя тыква!")
+        elif "даблер" in text_lower:
+            await message.reply("НЕТ!!!!!!!! ЭТО ЕБАННОЕ ГОВНИЩЕ!!!!!!!!!!!! НИХУЯ НЕ НАЙДЕШЬ КРОМЕ ВИРУСОВ МАЙНЕРОВ И ПРОЧЕЙ ХУЙНИ!!!!!!!!!!! ГОВНО!!!!!!!!!!")
+        elif "плед костя" in text_lower or "плед и костя" in text_lower or "костя и плед" in text_lower:
+            try:
+                await message.reply_photo("pled_kostya.jpg")
+            except Exception as e:
+                await message.reply("ошибка при отправке изображения")
+
+    if message.author_signature is None:
+        try:
+            await message.delete()
+            deleted += 1
+            data["deleted"] = deleted
+            save_data()
+            return
+        except Exception as e:
+            print(f"ошибка удаления: {e}")
+            return
+
+    is_admin = False
+    async for member in app.get_chat_members(TARGET_CHANNEL_ID, filter=ChatMembersFilter.ADMINISTRATORS):
+        full_name = member.user.first_name
+        if member.user.last_name:
+            full_name += " " + member.user.last_name
+        
+        if full_name == message.author_signature:
+            is_admin = True
+            break
+
+    if not is_admin:
+        try:
+            await message.delete()
+            deleted += 1
+            data["deleted"] = deleted
+            save_data()
+        except Exception as e:
+            print(f"ошибка удаления: {e}")
+
+def run_client():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
+    async def main():
+        await app.start()
+        print("запущено")
+        await idle()
+        
+    try:
+        loop.run_until_complete(main())
+    except KeyboardInterrupt:
+        print("стоп")
+    finally:
+        loop.run_until_complete(app.stop())
+        loop.close()
+
+if __name__ == "__main__":
+    try:
+        asyncio.get_running_loop()
+        thread = Thread(target=run_client, daemon=True)
+        thread.start()
+        print("фон")
+    except RuntimeError:
+        app.run()
