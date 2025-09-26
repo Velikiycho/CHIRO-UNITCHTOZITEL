@@ -22,7 +22,7 @@ async def auto_update_from_git():
 
         if pull.returncode == 0 and "Already up to date." not in pull.stdout:
             await app.send_message(TARGET_CHANNEL_ID,
-                "Ох..~ Да, семпай... Я с-сейчас.. перезагружусь.. и приму твои.. о-обновления..")
+                "Ох..~ Да, семпай... Я с-сейчас.. перезагружусь.. и приму твои.. о-обновления..~ :3")
             await asyncio.sleep(2)
             await app.stop()
             os.execv(sys.executable, ['python3'] + sys.argv)
@@ -32,8 +32,7 @@ async def auto_update_from_git():
             await app.send_message(TARGET_CHANNEL_ID, "ТЫ ТУПОЙ ПИДОР ТАМ НЕТУ ОБНОВЛЕНИЙ")
 
     except Exception as e:
-        print(f"Auto-update failed: {e}")
-        await app.send_message(TARGET_CHANNEL_ID, f"Ошибка автообновления: {e}")
+        await app.send_message(TARGET_CHANNEL_ID, f"ТЫ ПОСЛАН НАХУЙ ПИТОНОМ: {e}")
 
 
 
