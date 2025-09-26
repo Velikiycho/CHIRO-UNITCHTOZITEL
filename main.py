@@ -179,27 +179,6 @@ async def check_message_as_channel(client: Client, message: Message):
         except Exception as e:
             print(f"ошибка удаления: {e}")
 
-def run_client():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    async def main():
-        await app.start()
-        print("запущено")
-        await idle()
-    try:
-        loop.run_until_complete(main())
-    except KeyboardInterrupt:
-        print("стоп")
-    finally:
-        loop.run_until_complete(app.stop())
-        loop.close()
 
 if __name__ == "__main__":
-    try:
-        asyncio.get_running_loop()
-        thread = Thread(target=run_client, daemon=True)
-        thread.start()
-        print("фон")
-
-    except RuntimeError:
-        app.run()
+    app.run()
