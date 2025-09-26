@@ -3,24 +3,30 @@ from pyrogram.types import Message
 from pyrogram.enums import ChatMembersFilter
 import logging
 import asyncio
+from threading import Thread
 from datetime import datetime, timedelta
 import time
 import json
 import os
+
+import subprocess
 import sys
-from colorama import Fore
-from concurrent.futures import ThreadPoolExecutor
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+async def auto_update_from_git():
+        result = subprocess.run(['git', 'pull'], capture_output=True, text=True)
+        print(result.stdout)
+        if "Already up to date." not in result.stdout:
+            os.execv(sys.executable, [sys.executable] + sys.argv)
+            await app.send_message(TARGET_CHANNEL_ID, "Ох..~ Да, семпай... Я с-сейчас.. перезагружусь.. и приму твои.. о-обновления..")
+        else:
+            await app.send_message(TARGET_CHANNEL_ID, "ТЫ ТУПОЙ ПИДОР ТАМ НЕТУ ОБНОВЛЕНИЙ")
+
+
 logger = logging.getLogger(__name__)
-
 TARGET_CHANNEL_ID = -1002146341576
-
 app = Client("channel_sender", api_id=23368401, api_hash="645d7448f88331b853232d3f21621af7", bot_token="7561821304:AAEeeMEoizWktojF0zA9SnjZxIIch7H6ayo")
 
+AUTHORIZED_USERS = ["GDNick", "thekostyaxdd", "imlaktozik"]
 def load_data():
     try:
         if os.path.exists("data.json"):
@@ -33,14 +39,13 @@ def load_data():
 def save_data():
     with open("data.json", "w") as f:
         json.dump({"deleted": data["deleted"], 
-                   "deleted_yesterday": data["deleted_yesterday"],
-                   "last_reset_date": data["last_reset_date"]}, f)
+                  "deleted_yesterday": data["deleted_yesterday"],
+                  "last_reset_date": data["last_reset_date"]}, f)
 
 data = load_data()
 deleted = data["deleted"]
 deleted_yesterday = data["deleted_yesterday"]
 last_reset_date = data["last_reset_date"]
-
 start_time = datetime.now()
 last_sanya_time = 0
 
@@ -55,21 +60,20 @@ def pluralize(n, forms):
 def format_uptime():
     now = datetime.now()
     delta = now - start_time
-    
     days = delta.days
     hours, remainder = divmod(delta.seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
-    
     days_str = f"{days} {pluralize(days, ['день', 'дня', 'дней'])}"
     hours_str = f"{hours} {pluralize(hours, ['час', 'часа', 'часов'])}"
     minutes_str = f"{minutes} {pluralize(minutes, ['минута', 'минуты', 'минут'])}"
     seconds_str = f"{seconds} {pluralize(seconds, ['секунда', 'секунды', 'секунд'])}"
-    
     return f"{days_str}, {hours_str}, {minutes_str}, {seconds_str}"
+
+
+
 
 def check_and_reset_counter():
     global deleted, deleted_yesterday, last_reset_date
-    
     current_date = datetime.now().strftime("%Y-%m-%d")
     if current_date != last_reset_date:
         deleted_yesterday = deleted
@@ -78,17 +82,29 @@ def check_and_reset_counter():
         data["deleted_yesterday"] = deleted_yesterday
         data["deleted"] = deleted
         data["last_reset_date"] = last_reset_date
+
         save_data()
+
+@app.on_message(filters.private)
+async def handle_private_message(client: Client, message: Message):
+    if message.from_user.username and message.from_user.username in AUTHORIZED_USERS:
+        if message.text:
+            await client.send_message(TARGET_CHANNEL_ID, message.text)
+        else:
+            await message.reply("ТЫ ТУПОЙ ПИДОР МОЖНО ТОЛЬКО ТЕКСТ")
+    else:
+        await message.reply("ИДИ НАХУЙ ЕБЛАН")
 
 @app.on_message(filters.chat(TARGET_CHANNEL_ID))
 async def check_message_as_channel(client: Client, message: Message):
-    global deleted, last_sanya_time
 
+    global deleted, last_sanya_time
     check_and_reset_counter()
-    
     if message.text:
         text_lower = message.text.lower()
-        
+
+        if message.text == "aek!update":
+            await auto_update_from_git()
         if message.text == "aek!start":
             uptime = format_uptime()
             await message.reply(f"привет я бот я буду ебать в сракатан тех кто пишет от каналов!! \nсегодня пидорасов: {deleted} (вчера было {deleted_yesterday})\nхост работает уже: {uptime}")
@@ -117,7 +133,6 @@ async def check_message_as_channel(client: Client, message: Message):
                 await message.reply_photo("pled_kostya.jpg")
             except Exception as e:
                 await message.reply("ошибка при отправке изображения")
-
     if message.author_signature is None:
         try:
             await message.delete()
@@ -128,16 +143,16 @@ async def check_message_as_channel(client: Client, message: Message):
         except Exception as e:
             print(f"ошибка удаления: {e}")
             return
-
     is_admin = False
     async for member in app.get_chat_members(TARGET_CHANNEL_ID, filter=ChatMembersFilter.ADMINISTRATORS):
         full_name = member.user.first_name
         if member.user.last_name:
             full_name += " " + member.user.last_name
-        
+
         if full_name == message.author_signature:
             is_admin = True
             break
+
 
     if not is_admin:
         try:
@@ -148,25 +163,27 @@ async def check_message_as_channel(client: Client, message: Message):
         except Exception as e:
             print(f"ошибка удаления: {e}")
 
-async def console_input_handler():
-    executor = ThreadPoolExecutor(1)
-    while True:
-        try:
-            message_text = await asyncio.get_running_loop().run_in_executor(executor, input, "СООБЩЕНИЕ: ('exit' чтобы выйти):" + Fore.YELLOW + " ")
-            if message_text.lower() == 'exit':
-                print("выходим из сракатана кости")
-                break
-            await app.send_message(TARGET_CHANNEL_ID, message_text)
-            print(Fore.RESET)
-        except EOFError:
-            break
-        except Exception as e:
-            print(f"питон тебя послал нахуй: {e}")
-
-async def main():
-    await app.start()
-    await asyncio.gather(idle(), console_input_handler())
-    await app.stop()
+def run_client():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    async def main():
+        await app.start()
+        print("запущено")
+        await idle()
+    try:
+        loop.run_until_complete(main())
+    except KeyboardInterrupt:
+        print("стоп")
+    finally:
+        loop.run_until_complete(app.stop())
+        loop.close()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.get_running_loop()
+        thread = Thread(target=run_client, daemon=True)
+        thread.start()
+        print("фон")
+
+    except RuntimeError:
+        app.run()
