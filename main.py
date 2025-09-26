@@ -15,12 +15,9 @@ import sys
 async def auto_update_from_git():
     try:
         reset = subprocess.run(['git', 'reset', '--hard', 'HEAD'], capture_output=True, text=True)
-        print(f"Git reset: {reset.stdout}{reset.stderr}")
         clean = subprocess.run(['git', 'clean', '-fd'], capture_output=True, text=True)
-        print(f"Git clean: {clean.stdout}{clean.stderr}")
 
         pull = subprocess.run(['git', 'pull'], capture_output=True, text=True)
-        print(f"Git pull: {pull.stdout}{pull.stderr}")
 
         if pull.returncode == 0 and "Already up to date." not in pull.stdout:
             await app.send_message(TARGET_CHANNEL_ID,
