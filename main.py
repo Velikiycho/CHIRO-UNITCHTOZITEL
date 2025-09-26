@@ -38,7 +38,7 @@ async def auto_update_from_git():
 
 logger = logging.getLogger(__name__)
 TARGET_CHANNEL_ID = -1002146341576
-app = Client("channel_sender", api_id=23368401, api_hash="645d7448f88331b853232d3f21621af7", bot_token="7561821304:AAEeeMEoizWktojF0zA9SnjZxIIch7H6ayo")
+app = Client("channel_sender", api_id=23368401, api_hash="645d7448f88331b853232d3f21621af7", bot_token="7561821304:AAEeeMEoizWktojF0zA9SnjZxIIch7H6ayo", workdir="")
 
 AUTHORIZED_USERS = ["GDNick", "thekostyaxdd", "imlaktozik"]
 def load_data():
