@@ -3,11 +3,13 @@ from pyrogram.types import Message
 from pyrogram.enums import ChatMembersFilter
 import logging
 import asyncio
-from threading import Thread
 from datetime import datetime, timedelta
 import time
 import json
 import os
+import sys
+from colorama import Fore
+from concurrent.futures import ThreadPoolExecutor
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -19,7 +21,6 @@ TARGET_CHANNEL_ID = -1002146341576
 
 app = Client("channel_sender", api_id=23368401, api_hash="645d7448f88331b853232d3f21621af7", bot_token="7561821304:AAEeeMEoizWktojF0zA9SnjZxIIch7H6ayo")
 
-
 def load_data():
     try:
         if os.path.exists("data.json"):
@@ -29,13 +30,11 @@ def load_data():
         pass
     return {"deleted": 0, "deleted_yesterday": 0, "last_reset_date": datetime.now().strftime("%Y-%m-%d")}
 
-
 def save_data():
     with open("data.json", "w") as f:
         json.dump({"deleted": data["deleted"], 
-                  "deleted_yesterday": data["deleted_yesterday"],
-                  "last_reset_date": data["last_reset_date"]}, f)
-
+                   "deleted_yesterday": data["deleted_yesterday"],
+                   "last_reset_date": data["last_reset_date"]}, f)
 
 data = load_data()
 deleted = data["deleted"]
@@ -68,7 +67,6 @@ def format_uptime():
     
     return f"{days_str}, {hours_str}, {minutes_str}, {seconds_str}"
 
-
 def check_and_reset_counter():
     global deleted, deleted_yesterday, last_reset_date
     
@@ -85,7 +83,6 @@ def check_and_reset_counter():
 @app.on_message(filters.chat(TARGET_CHANNEL_ID))
 async def check_message_as_channel(client: Client, message: Message):
     global deleted, last_sanya_time
-    
 
     check_and_reset_counter()
     
@@ -151,28 +148,25 @@ async def check_message_as_channel(client: Client, message: Message):
         except Exception as e:
             print(f"ошибка удаления: {e}")
 
-def run_client():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    
-    async def main():
-        await app.start()
-        print("запущено")
-        await idle()
-        
-    try:
-        loop.run_until_complete(main())
-    except KeyboardInterrupt:
-        print("стоп")
-    finally:
-        loop.run_until_complete(app.stop())
-        loop.close()
+async def console_input_handler():
+    executor = ThreadPoolExecutor(1)
+    while True:
+        try:
+            message_text = await asyncio.get_running_loop().run_in_executor(executor, input, "СООБЩЕНИЕ: ('exit' чтобы выйти):" + Fore.YELLOW + " ")
+            if message_text.lower() == 'exit':
+                print("выходим из сракатана кости")
+                break
+            await app.send_message(TARGET_CHANNEL_ID, message_text)
+            print(Fore.RESET)
+        except EOFError:
+            break
+        except Exception as e:
+            print(f"питон тебя послал нахуй: {e}")
+
+async def main():
+    await app.start()
+    await asyncio.gather(idle(), console_input_handler())
+    await app.stop()
 
 if __name__ == "__main__":
-    try:
-        asyncio.get_running_loop()
-        thread = Thread(target=run_client, daemon=True)
-        thread.start()
-        print("фон")
-    except RuntimeError:
-        app.run()
+    asyncio.run(main())
