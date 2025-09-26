@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import time
 import json
 import os
+import colorama
 import subprocess
 import sys
 
@@ -24,11 +25,9 @@ async def auto_update_from_git():
                 "Ох..~ Да, семпай... Я с-сейчас.. перезагружусь.. и приму твои.. о-обновления..")
             await asyncio.sleep(2)
             await app.stop()
+            os.execv(sys.executable, ['python'] + sys.argv)
+            exit(0)
 
-            python = sys.executable
-            args = [python] + sys.argv
-            subprocess.Popen(args, close_fds=True)
-            sys.exit(0)
         else:
             await app.send_message(TARGET_CHANNEL_ID, "ТЫ ТУПОЙ ПИДОР ТАМ НЕТУ ОБНОВЛЕНИЙ")
 
@@ -45,6 +44,7 @@ app = Client("channel_sender", api_id=23368401, api_hash="645d7448f88331b853232d
 AUTHORIZED_USERS = ["GDNick", "thekostyaxdd", "imlaktozik"]
 def load_data():
     try:
+        print(colorama.Fore.GREEN + "Загрузка данных..." + colorama.Fore.RESET)
         if os.path.exists("data.json"):
             with open("data.json", "r") as f:
                 return json.load(f)
@@ -106,6 +106,7 @@ async def handle_private_message(client: Client, message: Message):
     if message.from_user.username and message.from_user.username in AUTHORIZED_USERS:
         if message.text:
             await client.send_message(TARGET_CHANNEL_ID, message.text)
+            print(colorama.Fore.YELLOW + f"Сообщение от: {message.from_user.username}: {message.text}" + colorama.Fore.RESET)
         else:
             await message.reply("ТЫ ТУПОЙ ПИДОР МОЖНО ТОЛЬКО ТЕКСТ")
     else:
@@ -152,6 +153,7 @@ async def check_message_as_channel(client: Client, message: Message):
     if message.author_signature is None:
         try:
             await message.delete()
+            print(colorama.Fore.RED + f"Удалено сообщение от АЭКа {colorama.Fore.RESET}")
             deleted += 1
             data["deleted"] = deleted
             save_data()
@@ -173,6 +175,7 @@ async def check_message_as_channel(client: Client, message: Message):
     if not is_admin:
         try:
             await message.delete()
+            print(colorama.Fore.RED + f"Удалено сообщение от канала {message.author_signature} {colorama.Fore.RESET}")
             deleted += 1
             data["deleted"] = deleted
             save_data()
@@ -181,4 +184,5 @@ async def check_message_as_channel(client: Client, message: Message):
 
 
 if __name__ == "__main__":
+    print("ЧИРО УНИЧТОЖИТЕЛЬ СООБЩЕНИЙ\n____")
     app.run()
