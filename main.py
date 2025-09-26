@@ -25,7 +25,7 @@ async def auto_update_from_git():
                 "Ох..~ Да, семпай... Я с-сейчас.. перезагружусь.. и приму твои.. о-обновления..")
             await asyncio.sleep(2)
             await app.stop()
-            os.execv(sys.executable, ['python'] + sys.argv)
+            os.execv(sys.executable, ['python3'] + sys.argv)
             exit(0)
 
         else:
@@ -186,3 +186,4 @@ async def check_message_as_channel(client: Client, message: Message):
 if __name__ == "__main__":
     print("ЧИРО УНИЧТОЖИТЕЛЬ СООБЩЕНИЙ\n____")
     app.run()
+
