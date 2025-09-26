@@ -8,18 +8,37 @@ from datetime import datetime, timedelta
 import time
 import json
 import os
-
 import subprocess
 import sys
 
+
 async def auto_update_from_git():
-        result = subprocess.run(['git', 'pull'], capture_output=True, text=True)
-        print(result.stdout)
-        if "Already up to date." not in result.stdout:
-            os.execv(sys.executable, [sys.executable] + sys.argv)
-            await app.send_message(TARGET_CHANNEL_ID, "Ох..~ Да, семпай... Я с-сейчас.. перезагружусь.. и приму твои.. о-обновления..")
+    try:
+        reset = subprocess.run(['git', 'reset', '--hard', 'HEAD'], capture_output=True, text=True)
+        print(f"Git reset: {reset.stdout}{reset.stderr}")
+        clean = subprocess.run(['git', 'clean', '-fd'], capture_output=True, text=True)
+        print(f"Git clean: {clean.stdout}{clean.stderr}")
+
+        pull = subprocess.run(['git', 'pull'], capture_output=True, text=True)
+        print(f"Git pull: {pull.stdout}{pull.stderr}")
+
+        if pull.returncode == 0 and "Already up to date." not in pull.stdout:
+            await app.send_message(TARGET_CHANNEL_ID,
+                "Ох..~ Да, семпай... Я с-сейчас.. перезагружусь.. и приму твои.. о-обновления..")
+            await asyncio.sleep(2)
+            await app.stop()
+
+            python = sys.executable
+            args = [python] + sys.argv
+            subprocess.Popen(args, close_fds=True)
+            sys.exit(0)
         else:
             await app.send_message(TARGET_CHANNEL_ID, "ТЫ ТУПОЙ ПИДОР ТАМ НЕТУ ОБНОВЛЕНИЙ")
+
+    except Exception as e:
+        print(f"Auto-update failed: {e}")
+        await app.send_message(TARGET_CHANNEL_ID, f"Ошибка автообновления: {e}")
+
 
 
 logger = logging.getLogger(__name__)
@@ -104,7 +123,7 @@ async def check_message_as_channel(client: Client, message: Message):
         text_lower = message.text.lower()
 
         if message.text == "aek!update":
-            await auto_update_from_git()
+            asyncio.create_task(auto_update_from_git())
         if message.text == "aek!start":
             uptime = format_uptime()
             await message.reply(f"привет я бот я буду ебать в сракатан тех кто пишет от каналов!! \nсегодня пидорасов: {deleted} (вчера было {deleted_yesterday})\nхост работает уже: {uptime}")
