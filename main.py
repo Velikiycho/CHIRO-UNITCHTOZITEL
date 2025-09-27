@@ -109,7 +109,7 @@ async def handle_private_message(client: Client, message: Message):
         else:
             await message.reply("ТЫ ТУПОЙ ПИДОР МОЖНО ТОЛЬКО ТЕКСТ")
     else:
-        await message.reply("ИДИ НАХУЙ ЕБЛАН")
+        await message.reply("")
 
 @app.on_message(filters.chat(TARGET_CHANNEL_ID))
 async def check_message_as_channel(client: Client, message: Message):
@@ -185,3 +185,4 @@ async def check_message_as_channel(client: Client, message: Message):
 if __name__ == "__main__":
     print("ЧИРО УНИЧТОЖИТЕЛЬ СООБЩЕНИЙ\n____")
     app.run()
+
