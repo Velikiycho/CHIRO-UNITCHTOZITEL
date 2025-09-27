@@ -139,14 +139,14 @@ async def check_message_as_channel(client: Client, message: Message):
             await message.reply("привет я гдник и я педофил")
         elif "тыква" in text_lower or "костя тыква" in text_lower:
             try:
-                await message.reply_photo("kostya_tikva.jpg")
+                await message.reply_photo("IMG_20250928_003810_558.jpg")
             except Exception as e:
                 await message.reply("ошибка при отправке изображения костя тыква!")
         elif "даблер" in text_lower:
             await message.reply("НЕТ!!!!!!!! ЭТО ЕБАННОЕ ГОВНИЩЕ!!!!!!!!!!!! НИХУЯ НЕ НАЙДЕШЬ КРОМЕ ВИРУСОВ МАЙНЕРОВ И ПРОЧЕЙ ХУЙНИ!!!!!!!!!!! ГОВНО!!!!!!!!!!")
         elif "плед костя" in text_lower or "плед и костя" in text_lower or "костя и плед" in text_lower:
             try:
-                await message.reply_photo("pled_kostya.jpg")
+                await message.reply_photo("IMG_20250928_003800_878.jpg")
             except Exception as e:
                 await message.reply("ошибка при отправке изображения")
     if message.author_signature is None:
@@ -185,4 +185,5 @@ async def check_message_as_channel(client: Client, message: Message):
 if __name__ == "__main__":
     print("ЧИРО УНИЧТОЖИТЕЛЬ СООБЩЕНИЙ\n____")
     app.run()
+
 
